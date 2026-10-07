@@ -1,0 +1,94 @@
+/* 二手集市前端 —— 简洁样式（骨架） */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #f5f6f8;
+  color: #1f2933;
+  line-height: 1.6;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.container { max-width: 960px; margin: 0 auto; padding: 20px; }
+.container.narrow { max-width: 640px; }
+
+/* 顶栏 */
+.topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 20px; background: #fff; border-bottom: 1px solid #e4e7eb;
+}
+.logo { font-size: 18px; font-weight: 600; color: #1d4ed8; }
+
+/* 按钮 */
+.btn {
+  display: inline-block; border: 1px solid #d1d5db; background: #fff;
+  color: #4b5563; padding: 8px 16px; border-radius: 6px;
+  font-size: 14px; cursor: pointer; transition: background .15s;
+}
+.btn:hover { background: #f3f4f6; }
+.btn-primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+
+/* 搜索工具栏 */
+.toolbar { margin: 20px 0; }
+.toolbar input[type="search"] {
+  width: 60%; max-width: 360px; padding: 9px 12px;
+  border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;
+}
+.category-bar { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+.category-bar .chip {
+  padding: 4px 14px; border: 1px solid #d1d5db; border-radius: 999px;
+  font-size: 13px; cursor: pointer; background: #fff;
+}
+.category-bar .chip.active { background: #eff6ff; border-color: #2563eb; color: #1d4ed8; }
+
+/* 商品网格 */
+.product-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.product-card {
+  background: #fff; border: 1px solid #e4e7eb; border-radius: 10px;
+  overflow: hidden; cursor: pointer;
+}
+.product-card .thumb {
+  height: 160px; background: #eef1f4; display: flex;
+  align-items: center; justify-content: center; color: #9aa5b1; font-size: 13px;
+}
+.product-card .info { padding: 12px; }
+.product-card .title {
+  font-size: 14px; font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.product-card .price { color: #dc2626; font-size: 16px; font-weight: 600; margin-top: 6px; }
+.product-card .status { font-size: 12px; color: #9aa5b1; }
+
+.empty-tip { color: #9aa5b1; text-align: center; padding: 40px 0; }
+
+/* 表单 / 面板 */
+.page-title { font-size: 22px; margin: 20px 0 16px; }
+.panel {
+  background: #fff; border: 1px solid #e4e7eb; border-radius: 10px;
+  padding: 20px; margin-bottom: 16px;
+}
+.panel-title { font-size: 16px; margin-bottom: 14px; }
+.panel label { display: block; margin-bottom: 14px; font-size: 14px; color: #374151; }
+.panel input[type="text"], .panel input[type="number"],
+.panel input[type="file"], .panel textarea, .panel select {
+  width: 100%; margin-top: 6px; padding: 9px 10px;
+  border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: inherit;
+}
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+.tip { font-size: 13px; color: #7b8794; margin-top: 8px; }
+.tip.error { color: #dc2626; }
+.tip.success { color: #16a34a; }
+
+/* 详情页 */
+.back-link { display: inline-block; margin: 16px 0; color: #2563eb; font-size: 14px; }
+.detail-image { width: 100%; height: 280px; object-fit: cover; background: #eef1f4; border-radius: 8px; }
+.detail-price { color: #dc2626; font-size: 24px; font-weight: 700; margin: 12px 0; }
+.detail-meta { color: #6b7280; font-size: 13px; margin-bottom: 12px; }
+.detail-desc { white-space: pre-wrap; }

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>教务器材预约</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f6f8;
+    color: #1f2933;
+    line-height: 1.6;
+  }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+
+  header h1 { font-size: 24px; font-weight: 600; }
+  header p { color: #7b8794; font-size: 14px; margin-top: 6px; }
+
+  /* 器材卡片 */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid #e4e7eb;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card h2 { font-size: 17px; font-weight: 600; }
+  .card .desc { color: #7b8794; font-size: 13px; margin-top: 8px; flex: 1; }
+  .card .meta { font-size: 12px; color: #9aa5b1; margin: 12px 0 16px; }
+
+  .btn {
+    border: none;
+    border-radius: 6px;
+    padding: 9px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    background: #2563eb;
+    color: #fff;
+    transition: background .15s;
+  }
+  .btn:hover { background: #1d4ed8; }
+  .btn.ghost {
+    background: #fff;
+    color: #4b5563;
+    border: 1px solid #d1d5db;
+  }
+  .btn.ghost:hover { background: #f3f4f6; }
+
+  /* 预约记录 */
+  .records { margin-top: 36px; }
+  .records h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+
+  table { width: 100%; border-collapse: collapse; background: #fff;
+    border: 1px solid #e4e7eb; border-radius: 10px; overflow: hidden; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid #f0f1f3; }
+  th { background: #f9fafb; font-weight: 500; color: #6b7280; font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  .empty { color: #9aa5b1; font-size: 13px; padding: 16px 14px; background: #fff;
+    border: 1px solid #e4e7eb; border-radius: 10px; }
+  .link-btn { background: none; border: none; color: #dc2626; font-size: 13px; cursor: pointer; }
+
+  /* 弹窗 */
+  .mask {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(31, 41, 51, .45);
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .mask.show { display: flex; }
+
+  .modal {
+    background: #fff; border-radius: 12px; width: 100%; max-width: 400px;
+    padding: 24px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal h3 { font-size: 18px; font-weight: 600; }
+  .field { margin-top: 16px; }
+  .field label { display: block; font-size: 13px; color: #4b5563; margin-bottom: 6px; }
+  .field input[type="date"] {
+    width: 100%; padding: 8px 10px; border: 1px solid #d1d5db;
+    border-radius: 6px; font-size: 14px;
+  }
+
+  .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .slot {
+    border: 1px solid #d1d5db; border-radius: 6px; padding: 8px;
+    text-align: center; font-size: 13px; cursor: pointer;
+    user-select: none;
+  }
+  .slot input { display: none; }
+  .slot.selected { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+
+  .tip { font-size: 13px; margin-top: 14px; min-height: 20px; }
+  .tip.error { color: #dc2626; }
+  .tip.success { color: #16a34a; }
+
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>教务器材预约</h1>
+    <p>选择器材、日期与时段提交预约；同一器材同一时段不可重复预约。</p>
+  </header>
+
+  <div class="cards" id="cards"></div>
+
+  <section class="records">
+    <h3>当前预约</h3>
+    <div id="recordArea"></div>
+  </section>
+</div>
+
+<!-- 预约弹窗 -->
+<div class="mask" id="mask">
+  <div class="modal">
+    <h3 id="modalTitle">预约器材</h3>
+    <div class="field">
+      <label for="bookDate">预约日期</label>
+      <input type="date" id="bookDate">
+    </div>
+    <div class="field">
+      <label>选择时段</label>
+      <div class="slots" id="slots"></div>
+    </div>
+    <div class="tip" id="tip"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="btnCancel">取消</button>
+      <button class="btn" id="btnSubmit">提交预约</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---------- 数据 ----------
+  const EQUIPMENT = [
+    { id: 'projector', name: '投影仪',   desc: '高清激光投影仪，适合会议室、教室使用。', meta: '库存：2 台' },
+    { id: 'camera',    name: '单反相机', desc: '含标准镜头与备用电池，支持外借拍摄。',   meta: '库存：1 台' },
+    { id: 'speaker',   name: '便携音响', desc: '蓝牙便携音箱，适用户外活动与宣讲。',     meta: '库存：3 台' }
+  ];
+
+  const TIME_SLOTS = [
+    '08:00 - 09:40',
+    '10:00 - 11:40',
+    '14:00 - 15:40',
+    '16:00 - 17:40',
+    '19:00 - 20:40'
+  ];
+
+  const STORAGE_KEY = 'equipment_reservations';
+
+  function loadReservations() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+  function saveReservations(list) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  }
+
+  // ---------- 渲染器材卡片 ----------
+  const cardsEl = document.getElementById('cards');
+  EQUIPMENT.forEach(eq => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <h2>${eq.name}</h2>
+      <p class="desc">${eq.desc}</p>
+      <div class="meta">${eq.meta}</div>
+      <button class="btn" data-id="${eq.id}">预约</button>
+    `;
+    cardsEl.appendChild(card);
+  });
+
+  // ---------- 渲染预约记录 ----------
+  function renderRecords() {
+    const list = loadReservations();
+    const area = document.getElementById('recordArea');
+    if (list.length === 0) {
+      area.innerHTML = '<div class="empty">暂无预约记录。</div>';
+      return;
+    }
+    const rows = list
+      .slice()
+      .sort((a, b) => (a.date + a.slot).localeCompare(b.date + b.slot))
+      .map(r => `
+        <tr>
+          <td>${r.equipmentName}</td>
+          <td>${r.date}</td>
+          <td>${r.slot}</td>
+          <td><button class="link-btn" data-key="${r.key}">取消</button></td>
+        </tr>`).join('');
+    area.innerHTML = `
+      <table>
+        <thead><tr><th>器材</th><th>日期</th><th>时段</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  document.getElementById('recordArea').addEventListener('click', ev => {
+    const btn = ev.target.closest('.link-btn');
+    if (!btn) return;
+    const key = btn.dataset.key;
+    saveReservations(loadReservations().filter(r => r.key !== key));
+    renderRecords();
+  });
+
+  // ---------- 预约弹窗逻辑 ----------
+  const mask = document.getElementById('mask');
+  const dateInput = document.getElementById('bookDate');
+  const slotsEl = document.getElementById('slots');
+  const tipEl = document.getElementById('tip');
+  let currentEquipment = null;
+  let selectedSlot = null;
+
+  function openModal(equipment) {
+    currentEquipment = equipment;
+    selectedSlot = null;
+    document.getElementById('modalTitle').textContent = `预约：${equipment.name}`;
+    tipEl.textContent = '';
+    tipEl.className = 'tip';
+
+    const today = new Date().toISOString().slice(0, 10);
+    dateInput.min = today;
+    dateInput.value = today;
+
+    slotsEl.innerHTML = TIME_SLOTS.map(s =>
+      `<label class="slot"><input type="radio" name="slot" value="${s}">${s}</label>`
+    ).join('');
+
+    mask.classList.add('show');
+  }
+
+  function closeModal() {
+    mask.classList.remove('show');
+  }
+
+  slotsEl.addEventListener('change', ev => {
+    selectedSlot = ev.target.value;
+    slotsEl.querySelectorAll('.slot').forEach(el =>
+      el.classList.toggle('selected', el.querySelector('input').checked));
+    tipEl.textContent = '';
+  });
+
+  document.getElementById('btnCancel').addEventListener('click', closeModal);
+  mask.addEventListener('click', ev => { if (ev.target === mask) closeModal(); });
+
+  cardsEl.addEventListener('click', ev => {
+    const btn = ev.target.closest('button[data-id]');
+    if (!btn) return;
+    openModal(EQUIPMENT.find(e => e.id === btn.dataset.id));
+  });
+
+  // ---------- 提交：重复预约校验 ----------
+  document.getElementById('btnSubmit').addEventListener('click', () => {
+    const date = dateInput.value;
+    if (!date) {
+      showTip('请选择预约日期。', true);
+      return;
+    }
+    if (!selectedSlot) {
+      showTip('请选择预约时段。', true);
+      return;
+    }
+
+    const key = `${currentEquipment.id}|${date}|${selectedSlot}`;
+    const reservations = loadReservations();
+
+    // 同一器材 + 同一日期 + 同一时段 => 拒绝
+    if (reservations.some(r => r.key === key)) {
+      showTip('预约失败：该器材在该日期时段已被预约，请选择其他时段。', true);
+      return;
+    }
+
+    reservations.push({
+      key,
+      equipmentId: currentEquipment.id,
+      equipmentName: currentEquipment.name,
+      date,
+      slot: selectedSlot
+    });
+    saveReservations(reservations);
+    renderRecords();
+    showTip('预约成功！', false);
+    setTimeout(closeModal, 700);
+  });
+
+  function showTip(msg, isError) {
+    tipEl.textContent = msg;
+    tipEl.className = 'tip ' + (isError ? 'error' : 'success');
+  }
+
+  renderRecords();
+</script>
+</body>
+</html>

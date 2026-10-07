@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>T3 电梯稿｜二手集市+AI卖家助手</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:"Microsoft YaHei",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      background:#f4f7fa;
+      color:#1f2937;
+      line-height:1.7;
+      padding:24px 16px;
+      max-width:900px;
+      margin:0 auto;
+    }
+    .container{background:#ffffff;border-radius:16px;padding:36px 40px;box-shadow:0 4px 16px rgba(0,0,0,0.08);}
+    h1{font-size:28px;color:#1d4ed8;margin-bottom:8px;}
+    .subtitle{color:#4b5563;font-size:16px;margin-bottom:32px;}
+    section{margin-bottom:28px;}
+    h2{font-size:18px;color:#2563eb;margin-bottom:12px;border-left:4px solid #2563eb;padding-left:12px;}
+    p{margin-bottom:10px;}
+    ul{padding-left:22px;margin-bottom:8px;}
+    li{margin:8px 0;}
+    .box-gray{background:#f3f4f6;padding:16px 20px;border-radius:10px;margin:12px 0;}
+    .risk{background:#fffbeb;border:1px solid #fcd34d;}
+    .check{background:#eff6ff;border:1px solid #bfdbfe;}
+    footer{margin-top:36px;text-align:center;color:#6b7280;font-size:14px;}
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>T3 一页想法电梯稿</h1>
+  <div class="subtitle">二手集市 + AI卖家助手｜5分钟项目汇报</div>
+
+  <section>
+    <h2>给谁解决什么问题</h2>
+    <div class="box-gray">
+      <p>二手闲置卖家发布商品时，手动写标题描述、估价格、回复买家咨询耗时费力。</p>
+      <p>面向普通个人闲置卖家，拍照借助AI完成发布准备。</p>
+      <p>降低二手物品上架门槛，提升闲置发布效率。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>核心功能（3个，动词开头）</h2>
+    <ul>
+      <li><strong>生成</strong>商品标题与详情文案：上传物品照片，AI自动生成商品标题、描述文案。</li>
+      <li><strong>给出</strong>二手参考报价：识别物品信息，给出历史同类商品参考定价。</li>
+      <li><strong>应答</strong>买家常见咨询：AI自动回答买家高频问题，减轻卖家回复压力。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>凭什么做得完（技术基础）</h2>
+    <ul>
+      <li>商品CRUD、列表、详情、状态流转：后端+数据库课程已有知识。</li>
+      <li>图片上传、页面交互展示：Web前端与接口调用能力。</li>
+      <li>AI：调用第三方大模型API，只做调用，不训练大模型，降低开发量。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>最大风险 + 对策</h2>
+    <div class="box-gray risk">
+      <p><strong>风险：</strong>AI输出文案、估价结果质量不稳定，出现错误信息。</p>
+      <p><strong>对策：</strong>AI输出只作为草稿建议，全部交由卖家二次编辑确认后再发布，不直接自动提交。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>审题三问</h2>
+    <div class="box-gray check">
+      <ul>
+        <li><strong>用户真实存在？</strong>真实，普通人处理闲置普遍嫌写文案估价麻烦，是现实痛点。</li>
+        <li><strong>砍掉1个功能行不行？</strong>可以；优先砍掉AI应答买家咨询，保留文案+估价，仍可跑通最小闭环。</li>
+        <li><strong>演示第一眼看什么？</strong>上传二手物品照片，一键AI生成标题描述+参考价格，展示发布草稿页面。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>项目边界（最小闭环）</h2>
+    <div class="box-gray">
+      <p>商品发布（图+文）→列表/搜索/分类→详情页→下单锁定；<br>
+      <strong>不做支付、物流；成交仅修改商品状态标记成交。</strong><br>
+      进阶功能（以图搜同类、AI砍价agent）不纳入第一版交付。
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    单页电梯稿｜可直接用于课堂展示、Gitee Pages部署
+  </footer>
+</div>
+</body>
+</html>
