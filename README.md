@@ -65,7 +65,7 @@ copy .env.example .env        # Windows；macOS/Linux 用 cp
 npm run dev
 ```
 
-后端默认运行在 http://localhost:3000 ，健康检查：http://localhost:3000/api/health
+后端默认运行在 http://localhost:8080 ，健康检查：http://localhost:8080/api/health
 
 ### 3. 启动前端
 
