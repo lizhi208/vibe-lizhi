@@ -1,5 +1,6 @@
 const productService = require('../services/product.service');
 const ApiResponse = require('../utils/ApiResponse');
+const parsePaging = require('../utils/parsePaging');
 
 /**
  * 控制器只做「取参 -> 校验 -> 调 service -> 返回」，不写 SQL。
@@ -12,6 +13,28 @@ exports.listProducts = async (req, res, next) => {
       categoryId: categoryId || null
     });
     res.json(ApiResponse.success(list));
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * 分页列表：GET /api/products/page?page=&size=&keyword=&categoryId=
+ * page/size 非法时 parsePaging 直接抛 400，交由全局错误处理。
+ */
+exports.listProductsPaged = async (req, res, next) => {
+  try {
+    const { keyword, categoryId } = req.query;
+    const { page, size, offset } = parsePaging(req.query, { defaultSize: 10, maxSize: 50 });
+
+    const result = await productService.listProductsPaged({
+      keyword: keyword ? String(keyword).trim() : '',
+      categoryId: categoryId || null,
+      page,
+      size,
+      offset
+    });
+    res.json(ApiResponse.success(result));
   } catch (err) {
     next(err);
   }

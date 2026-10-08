@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>商品列表（分页） - 二手集市</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* 仅本页用到的分页条样式，内联避免改动公共 style.css */
+    .pager { display: flex; align-items: center; gap: 8px; justify-content: center; margin: 24px 0; }
+    .pager button { min-width: 36px; }
+    .pager .page-no { font-weight: 600; color: #1d4ed8; }
+    .pager .page-info { color: #7b8794; font-size: 13px; margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="logo" href="index.html">二手集市</a>
+    <nav>
+      <a href="index.html" class="btn">普通列表</a>
+      <a href="publish.html" class="btn btn-primary">发布闲置</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="toolbar">
+      <input id="searchInput" type="search" placeholder="搜索商品标题、描述…" />
+      <button id="searchBtn" class="btn btn-primary">搜索</button>
+      <div id="categoryBar" class="category-bar"></div>
+    </section>
+
+    <section>
+      <div id="productGrid" class="product-grid"></div>
+      <p id="emptyTip" class="empty-tip" hidden>暂无符合条件的商品</p>
+    </section>
+
+    <nav id="pager" class="pager" hidden>
+      <button id="prevBtn" class="btn">上一页</button>
+      <span>第 <span id="pageNo" class="page-no">1</span> / <span id="totalPages">1</span> 页</span>
+      <button id="nextBtn" class="btn">下一页</button>
+      <span id="pageInfo" class="page-info"></span>
+    </nav>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/products-paged.js"></script>
+</body>
+</html>

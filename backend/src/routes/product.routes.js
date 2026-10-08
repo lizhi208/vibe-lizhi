@@ -8,6 +8,9 @@ const productController = require('../controllers/product.controller');
 // GET /api/products          列表，支持 ?keyword=&categoryId=
 router.get('/', productController.listProducts);
 
+// GET /api/products/page     分页列表（必须在 /:id 之前注册，否则 page 会被当成 id）
+router.get('/page', productController.listProductsPaged);
+
 // GET /api/products/:id      商品详情
 router.get('/:id', productController.getProduct);
 

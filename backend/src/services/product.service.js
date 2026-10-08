@@ -30,6 +30,49 @@ const productService = {
     return rows;
   },
 
+  /**
+   * 分页列表：日期倒序（created_at DESC，id DESC 作稳定次序）。
+   * 返回 { list, pagination:{ page, size, total, totalPages } }。
+   */
+  async listProductsPaged({ keyword, categoryId, page, size, offset }) {
+    const conditions = ["status IN ('ON_SALE', 'LOCKED')"];
+    const whereParams = [];
+
+    if (keyword) {
+      conditions.push('(title LIKE ? OR description LIKE ?)');
+      whereParams.push(`%${keyword}%`, `%${keyword}%`);
+    }
+    if (categoryId) {
+      conditions.push('category_id = ?');
+      whereParams.push(categoryId);
+    }
+    const where = `WHERE ${conditions.join(' AND ')}`;
+
+    const [countRows] = await pool.query(
+      `SELECT COUNT(*) AS total FROM products ${where}`,
+      whereParams
+    );
+    const total = Number(countRows[0].total);
+
+    const [list] = await pool.query(
+      `SELECT id, title, price, image_url, status, created_at
+       FROM products ${where}
+       ORDER BY created_at DESC, id DESC
+       LIMIT ? OFFSET ?`,
+      [...whereParams, size, offset]
+    );
+
+    return {
+      list,
+      pagination: {
+        page,
+        size,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / size))
+      }
+    };
+  },
+
   async getProduct(id) {
     const [rows] = await pool.query(
       `SELECT id, seller_id, category_id, title, description, image_url,
