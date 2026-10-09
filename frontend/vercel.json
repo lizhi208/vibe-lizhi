@@ -2,6 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://handed-calculus-safeguard.ngrok-free.dev/api/$1"
+    }
+  ],
   "headers": [
     {
       "source": "/js/(.*)",

@@ -7,8 +7,8 @@
   async function request(path, options = {}) {
     const res = await fetch(BASE_URL + path, {
       headers: options.body instanceof FormData
-        ? {} // 让浏览器自动带 multipart boundary
-        : { 'Content-Type': 'application/json' },
+        ? { 'ngrok-skip-browser-warning': 'true' } // ngrok 免费档需跳过警告页
+        : { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
       ...options
     });
 
