@@ -3,9 +3,10 @@
  * 用法：node deploy/aiven-import.js <host> <port> <password>
  * 示例：node deploy/aiven-import.js flea-mysql-xxx.aivencloud.com 23456 avnadmin_password
  */
-const mysql = require('mysql2/promise');
-const fs = require('fs');
 const path = require('path');
+// 从 backend/node_modules 解析 mysql2（依赖装在 backend 下）
+const mysql = require(path.join(__dirname, '../backend/node_modules/mysql2/promise'));
+const fs = require('fs');
 
 const [host, port, password] = process.argv.slice(2);
 
