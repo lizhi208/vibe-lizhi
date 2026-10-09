@@ -92,6 +92,9 @@ python -m http.server 5500
 | PATCH | `/api/orders/:id/deal` | 标记成交（LOCKED → SOLD） | 已可用 |
 | POST | `/api/ai/draft` | 上传照片生成文案+参考价草稿 | 待接第三方 API（无 Key 时可手动发布） |
 | POST | `/api/ai/answer` | AI 应答买家咨询（P1，可裁剪） | TODO |
+| GET | `/api/stats/overview` | 商品总览（分类分布+状态分布） | 已可用（T1 接入） |
+| POST | `/api/stats/visit` | 记录一次页面访问 | 已可用（T2 访问统计） |
+| GET | `/api/stats/visits` | 读取各页面访问量 | 已可用 |
 
 > 说明：当前 MySQL 3306 实例实测为 5.7；`schema.sql` 中 ngram 全文索引使用 `/*!80000*/` 版本条件注释，5.7 自动忽略，搜索走 LIKE。
 
@@ -101,3 +104,24 @@ python -m http.server 5500
 - **AI 输出一律是草稿建议**：必须经卖家二次编辑确认后才能发布，不允许自动提交。
 - AI 服务不可用时，卖家可以手动填写并完成发布，闭环不中断。
 - 进阶功能（以图搜同类、AI 砍价 agent）不纳入第一版。
+
+## 外部能力接入记录（T1：ECharts 统计看板）
+
+**接的是什么**：[Apache ECharts 5.5.0](https://echarts.apache.org/)（开源图表库），用于首页旁的「商品统计看板」页 [stats.html](frontend/stats.html)，展示分类分布饼图、状态分布柱状图、页面访问量。
+
+**怎么接的（三步）**：
+
+1. **引入库**：纯 CDN 方式，在 `stats.html` 的 `<head>` 加一行
+   `<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>`
+   不经过 npm/构建工具（与项目「原生前端、无构建」的约定一致）。
+2. **准备数据**：后端新增 `/api/stats/overview`（分类分布 + 状态分布）和 `/api/stats/visits`（访问量），SQL 放在 [stats.service.js](backend/src/services/stats.service.js)，用 `GROUP BY` 聚合后直接返回 ECharts 需要的 `{name, value}` 结构。
+3. **渲染图表**：[stats.js](frontend/js/stats.js) 用 `echarts.init(dom)` + `setOption({...})` 分别渲染饼图、柱状图；`resize` 事件里调用 `chart.resize()` 做自适应。
+
+**坑在哪（实录）**：
+
+- **CDN 加载失败要有兜底**：校园网/离线时 `echarts` 可能是 `undefined`，直接 `echarts.init` 会抛错。已在 `initChart` 里判断 `typeof echarts === 'undefined'` 并显示友好提示，避免整个页面白屏。
+- **数据契约要对齐**：ECharts 饼图需要 `[{name, value}]`，柱状图需要分开的 `xAxis.data` 数组和 `series.data` 数组。一开始把 SQL 原样返回，前端还要再 `map`；后来让后端直接返回贴合的格式，前端只负责渲染。
+- **数字类型**：MySQL 的 `COUNT(*)` 经 mysql2 返回有时是字符串，`value` 必须 `Number(...)` 转一下，否则饼图百分比/柱状图 label 显示异常。
+- **容器必须有高度**：`.chart-box` 不给 `height` 时画布高度为 0，图表「渲染了但看不见」。已在 CSS 固定高度（320px/260px）。
+
+**访问统计（T2 验收项）**：首页加载时上报 `POST /api/stats/visit {path}`，后端写入 `page_views` 表（按 path 累加），看板页读取展示。失败静默，不影响主流程。

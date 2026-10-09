@@ -105,6 +105,18 @@ CREATE TABLE ai_generation_logs (
   KEY idx_product (product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI 调用记录（草稿/应答）';
 
+-- ---------------------------------------------------------------------
+-- 6. 访问统计表（T2 部署验收：含访问统计其一）
+--    按 path 累加访问次数
+-- ---------------------------------------------------------------------
+DROP TABLE IF EXISTS page_views;
+CREATE TABLE page_views (
+  path       VARCHAR(200) NOT NULL COMMENT '页面路径',
+  views      BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '访问次数',
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (path)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='页面访问统计';
+
 -- =====================================================================
 -- 初始化数据
 -- =====================================================================

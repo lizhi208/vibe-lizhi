@@ -23,6 +23,13 @@
   // 商品状态中文展示
   const STATUS_TEXT = { ON_SALE: '在售', LOCKED: '已锁定', SOLD: '已成交' };
 
+  // 访问统计上报（T2 验收：含访问统计其一）。失败静默，不影响主流程。
+  (function track() {
+    try {
+      window.api.post('/stats/visit', { path: location.pathname });
+    } catch (e) { /* 忽略 */ }
+  })();
+
   async function renderCategories() {
     let categories = [];
     try {
