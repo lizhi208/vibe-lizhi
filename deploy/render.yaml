@@ -1,0 +1,40 @@
+# Render.com 部署配置（后端）
+# 文档：https://render.com/docs/yaml-spec
+# 用法：Render Dashboard → New → Blueprint → 选 GitHub 仓库 → 自动识别本文件
+
+services:
+  - type: web
+    name: flea-market-api
+    runtime: node
+    region: singapore        # 选离你近的区域，降低延迟
+    plan: free               # 免费档（15 分钟无请求休眠，首次访问 30-60s 冷启动）
+    rootDir: backend
+    buildCommand: npm install --production
+    startCommand: node src/server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        sync: false          # 部署时在 Render Dashboard 填 Aiven Host
+      - key: DB_PORT
+        sync: false          # 填 Aiven Port（不是 3306）
+      - key: DB_USER
+        value: avnadmin
+      - key: DB_PASSWORD
+        sync: false          # 填 Aiven Password
+      - key: DB_NAME
+        value: defaultdb     # Aiven 免费档默认库名
+      - key: DB_SSL
+        value: "true"        # Aiven 强制 SSL
+      - key: FRONTEND_ORIGIN
+        value: "*"           # 前端部署后改为具体 Vercel 域名
+      # AI 功能暂不启用，留空或填你的第三方大模型配置
+      - key: AI_API_BASE_URL
+        value: ""
+      - key: AI_API_KEY
+        value: ""
+      - key: AI_MODEL
+        value: ""
