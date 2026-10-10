@@ -64,8 +64,16 @@ exports.createProduct = async (req, res, next) => {
     if (!Number.isFinite(numPrice) || numPrice < 0) {
       return res.status(400).json(ApiResponse.fail('价格不合法', 400));
     }
-    if (!categoryId) {
-      return res.status(400).json(ApiResponse.fail('请选择分类', 400));
+    const numCategoryId = Number(categoryId);
+    if (!Number.isInteger(numCategoryId) || numCategoryId < 1) {
+      return res.status(400).json(ApiResponse.fail('请选择合法分类', 400));
+    }
+    let numReferencePrice = null;
+    if (referencePrice != null && referencePrice !== '') {
+      numReferencePrice = Number(referencePrice);
+      if (!Number.isFinite(numReferencePrice) || numReferencePrice < 0) {
+        return res.status(400).json(ApiResponse.fail('参考价不合法', 400));
+      }
     }
 
     // AI 草稿必须由卖家确认后才会走到这里；服务端不接受任何“AI 自动发布”路径。
@@ -73,9 +81,9 @@ exports.createProduct = async (req, res, next) => {
       title: String(title).trim(),
       description: description || '',
       price: numPrice,
-      categoryId: Number(categoryId),
+      categoryId: numCategoryId,
       imageUrl: imageUrl || '',
-      referencePrice: referencePrice != null ? Number(referencePrice) : null
+      referencePrice: numReferencePrice
     });
     res.status(201).json(ApiResponse.success(product, '发布成功'));
   } catch (err) {
@@ -83,9 +91,54 @@ exports.createProduct = async (req, res, next) => {
   }
 };
 
+/**
+ * 编辑商品：只接受白名单字段，且每个字段先过校验再落库。
+ * 任一非法输入必须 400，且不得污染原数据。
+ */
 exports.updateProduct = async (req, res, next) => {
   try {
-    const product = await productService.updateProduct(req.params.id, req.body);
+    const body = req.body || {};
+    const patch = {};
+
+    if (body.title !== undefined) {
+      if (typeof body.title !== 'string' || !body.title.trim()) {
+        return res.status(400).json(ApiResponse.fail('标题不能为空', 400));
+      }
+      patch.title = body.title.trim();
+    }
+
+    if (body.price !== undefined) {
+      const numPrice = Number(body.price);
+      if (!Number.isFinite(numPrice) || numPrice < 0) {
+        return res.status(400).json(ApiResponse.fail('价格不合法', 400));
+      }
+      patch.price = numPrice;
+    }
+
+    if (body.categoryId !== undefined) {
+      const numCategoryId = Number(body.categoryId);
+      if (!Number.isInteger(numCategoryId) || numCategoryId < 1) {
+        return res.status(400).json(ApiResponse.fail('请选择合法分类', 400));
+      }
+      patch.categoryId = numCategoryId;
+    }
+
+    if (body.referencePrice !== undefined) {
+      if (body.referencePrice === null || body.referencePrice === '') {
+        patch.referencePrice = null;
+      } else {
+        const num = Number(body.referencePrice);
+        if (!Number.isFinite(num) || num < 0) {
+          return res.status(400).json(ApiResponse.fail('参考价不合法', 400));
+        }
+        patch.referencePrice = num;
+      }
+    }
+
+    if (body.description !== undefined) patch.description = body.description;
+    if (body.imageUrl !== undefined) patch.imageUrl = body.imageUrl;
+
+    const product = await productService.updateProduct(req.params.id, patch);
     if (!product) {
       return res.status(404).json(ApiResponse.fail('商品不存在', 404));
     }
