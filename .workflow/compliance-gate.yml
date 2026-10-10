@@ -1,0 +1,27 @@
+# Gitee Go 合规闸门：每次 push 到 master 自动校验「反思件 + 署名 commit」。
+# 红灯规则见根目录 交作业自查.py 的 --ci 模式（宽松口径四查）：
+#   ① 本次 push 有署名 commit  ② 最新反思件存在且非空
+#   ③ 反思件已入库             ④ 封卷 tag dayN 已推到 origin
+# 漏交直接红灯——作业想糊弄过去，得先过 CI。
+# 测试不在这里跑：契约测试（连真实 MySQL）走 GitHub Actions 的 .github/workflows/ci.yml。
+version: '1.0'
+name: compliance-gate
+displayName: 交作业合规闸门
+triggers:
+  push:
+    branches:
+      precise:
+        - master
+stages:
+  - stage:
+    name: compliance
+    displayName: 合规检查
+    strategy: naturally
+    trigger: auto
+    steps:
+      - step: build@python
+        name: compliance_check
+        displayName: 校验反思件+署名commit
+        pythonVersion: '3.9'
+        commands:
+          - python3 交作业自查.py --ci --name 李智
