@@ -1,5 +1,7 @@
 # 二手集市 + AI 卖家助手
 
+[![CI](https://github.com/lizhi208/vibe-lizhi/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/lizhi208/vibe-lizhi/actions/workflows/ci.yml)
+
 面向普通个人闲置卖家的 Web 产品原型：**拍照上传物品照片，AI 自动生成商品标题、详情文案与二手参考报价**，卖家二次编辑确认后发布；买家可浏览、搜索、分类查看商品并下单锁定。
 
 > 需求与边界详见 [docs/PRD.md](docs/PRD.md)。
@@ -125,3 +127,21 @@ python -m http.server 5500
 - **容器必须有高度**：`.chart-box` 不给 `height` 时画布高度为 0，图表「渲染了但看不见」。已在 CSS 固定高度（320px/260px）。
 
 **访问统计（T2 验收项）**：首页加载时上报 `POST /api/stats/visit {path}`，后端写入 `page_views` 表（按 path 累加），看板页读取展示。失败静默，不影响主流程。
+
+## 质量护栏（第 5 天：契约测试 + CI 闸门）
+
+功能完成的定义是**测试绿了**，不是"我看着像好了"。
+
+- **接口契约**：所有端点的正常/边界/错误码约定见 [docs/接口契约.md](docs/接口契约.md)，是前后端和测试的唯一事实源。
+- **契约测试**：[backend/test/api.contract.test.js](backend/test/api.contract.test.js)，用 Node 内置 `node:test` + `supertest`，**连真实 MySQL、不 mock 被测逻辑**，覆盖每个端点的正常路径、边界值、错误码（52 个用例）。
+- **隔离测试库**：测试一律用独立库 `flea_market_test`，由 [init-test-db.js](backend/test/helpers/init-test-db.js) 每组用例前重建，绝不碰开发库。
+- **CI 闸门**：[.github/workflows/ci.yml](.github/workflows/ci.yml)，push/PR 自动在 **MySQL 5.7 与 8.0** 双版本上跑测试，不绿不算完成。
+- **AI 互审记录**：评审清单、每条意见的裁决（修复/放过理由/上会）见 [docs/评审记录-day5.md](docs/评审记录-day5.md)。
+
+本地跑测试：
+
+```bash
+cd backend
+npm install
+npm test          # 需要本地 MySQL；自动重建 flea_market_test 库
+```

@@ -1,0 +1,62 @@
+# CI 闸门：push / PR 自动跑契约测试。
+# 规则：测试不绿，本次改动不算完成（不允许"我看着像好了"）。
+#
+# - 连真实 MySQL（service 容器），不 mock 被测逻辑。
+# - MySQL 5.7 / 8.0 双版本矩阵：本地 phpStudy 是 5.7，云端常用 8.0，两边都必须绿。
+# - 测试库 flea_market_test 由测试自己的 init-test-db.js 重建，与开发库物理隔离。
+
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  contract-tests:
+    name: 契约测试 (MySQL ${{ matrix.mysql }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        mysql: ['5.7', '8.0']
+
+    services:
+      mysql:
+        image: mysql:${{ matrix.mysql }}
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: flea_market_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_USER: root
+      DB_PASSWORD: ''
+      DB_NAME: flea_market_test
+      TEST_DB_NAME: flea_market_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 安装依赖
+        working-directory: backend
+        run: npm ci
+
+      - name: 跑契约测试（node:test + supertest，连真实 MySQL）
+        working-directory: backend
+        run: npm test

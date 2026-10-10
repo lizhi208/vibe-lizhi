@@ -6,7 +6,8 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "dev": "node --watch src/server.js",
+    "test": "node --test \"test/*.test.js\""
   },
   "dependencies": {
     "axios": "^1.7.7",
@@ -15,5 +16,8 @@
     "express": "^4.21.0",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.11.3"
+  },
+  "devDependencies": {
+    "supertest": "^7.3.1"
   }
 }
