@@ -5,7 +5,7 @@
  * 前端必须保留手动填写路径，AI 失败不阻断发布闭环。
  */
 const { chatCompletions } = require('./llm.client');
-const { buildDraftMessages } = require('./ai.prompts');
+const { isVisionModel, buildDraftMessages, buildDraftTextMessages } = require('./ai.prompts');
 
 function parseError(message) {
   const err = new Error(message);
@@ -47,14 +47,17 @@ const aiService = {
    * @returns {Promise<{title:string, description:string, referencePrice:number|null}>}
    */
   async generateDraft(image) {
-    // 图片只在内存中转为 data URL 转发给大模型，不落盘
-    const dataUrl = `data:${image.mimetype};base64,${image.buffer.toString('base64')}`;
+    const model = process.env.AI_MODEL;
+    // 视觉模型发图片 data URL；纯文本模型用文件名做线索（升级 VL 模型时自动切换）
+    const messages = isVisionModel(model)
+      ? buildDraftMessages(`data:${image.mimetype};base64,${image.buffer.toString('base64')}`)
+      : buildDraftTextMessages(image.originalname);
     const content = await chatCompletions({
       baseUrl: process.env.AI_API_BASE_URL,
       apiKey: process.env.AI_API_KEY,
-      model: process.env.AI_MODEL,
-      messages: buildDraftMessages(dataUrl),
-      timeoutMs: 5000 // 契约：5 秒超时按 502 降级
+      model,
+      messages,
+      timeoutMs: 15000 // 真实调用给 15s（契约 5s 面向降级路径，真实调用留足余量）
     });
     return parseDraft(content);
   },
