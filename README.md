@@ -87,6 +87,7 @@ python -m http.server 5500
 | GET | `/api/health` | 健康检查 | 已可用 |
 | GET | `/api/categories` | 分类列表 | 已可用 |
 | GET | `/api/products?keyword=&categoryId=` | 商品列表/搜索/分类 | 已可用 |
+| GET | `/api/products/page?page=&size=&keyword=&categoryId=` | 分页列表（含 pagination 结构） | 已可用 |
 | GET | `/api/products/:id` | 商品详情 | 已可用 |
 | POST | `/api/products` | 卖家确认后发布商品 | 已可用 |
 | PUT | `/api/products/:id` | 编辑商品 | 已可用 |
@@ -145,3 +146,67 @@ cd backend
 npm install
 npm test          # 需要本地 MySQL；自动重建 flea_market_test 库
 ```
+
+## 交叉验收清单（第 6 天 · 给同学用）
+
+> 只测不改。拉到本仓库后按下面逐项点，发现问题按文末模板提 issue。
+
+### 启动复核
+
+```bash
+mysql -u root -p < database/schema.sql      # 建库 flea_market_ai
+cd backend && npm install
+copy .env.example .env                       # 填 DB_PASSWORD=你的本机密码
+npm run dev                                   # 起在 http://localhost:8080
+cd ../frontend && python -m http.server 5500 # 另开一个终端
+# 浏览器开 http://localhost:5500/index.html
+```
+
+健康检查自检：`curl http://localhost:8080/api/health` → `{"code":0,"data":"pong"}`
+
+### 14 个端点逐项点（对照接口契约.md）
+
+| # | 动作 | 预期 |
+| --- | --- | --- |
+| 1 | `GET /api/health` | 200, `data:"pong"` |
+| 2 | `GET /api/categories` | 200, 5 个分类, id 升序 |
+| 3 | `GET /api/products` | 200, 数组 |
+| 4 | `GET /api/products/page?page=1&size=2` | 200, `pagination.totalPages` 正确 |
+| 5 | `GET /api/products/page?page=abc` | 400 |
+| 6 | `GET /api/products/999999` | 404 |
+| 7 | `POST /api/products`（缺标题） | 400 |
+| 8 | `POST /api/products`（price=-1） | 400 |
+| 9 | `PUT /api/products/:id`（price=-50） | 400 且原价不变 |
+| 10 | `POST /api/orders`（productId=abc） | 400 |
+| 11 | `POST /api/orders`（productId 不存在） | 409 |
+| 12 | `PATCH /api/orders/:id/deal`（不存在） | 404 |
+| 13 | `POST /api/ai/draft`（未传文件） | 400 |
+| 14 | `GET /api/stats/overview` | 200, 分类分布 + 状态分布 |
+
+> 完整契约（正常/边界/错误码）见 [docs/接口契约.md](docs/接口契约.md)。
+
+### 缺陷 issue 模板（复制粘贴用）
+
+```
+### 缺陷描述
+[一句话说清：做了什么、预期什么、实际什么]
+
+### 档级（打勾）
+- [ ] 重 · 契约不符（该 400 给了 500；字段名对不上契约表）
+- [ ] 重 · 崩溃（白屏、500、进程挂了）
+- [ ] 最重 · 数据错误（操作成功但数据没变/重启就丢）
+
+### 复现步骤
+1. ...
+2. ...
+3. 实际结果：...
+
+### 截图
+[贴这里]
+
+### 环境
+- 端点：GET/POST ...
+- 请求参数：...
+```
+
+> 写不清复现步骤的缺陷不算数——三档记分见课堂操作单。

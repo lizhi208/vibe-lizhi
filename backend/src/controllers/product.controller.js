@@ -1,6 +1,7 @@
 const productService = require('../services/product.service');
 const ApiResponse = require('../utils/ApiResponse');
 const parsePaging = require('../utils/parsePaging');
+const { validatePrice, validateCategoryId, validateReferencePrice } = require('../utils/validators');
 
 /**
  * 控制器只做「取参 -> 校验 -> 调 service -> 返回」，不写 SQL。
@@ -56,25 +57,13 @@ exports.createProduct = async (req, res, next) => {
   try {
     const { title, description, price, categoryId, imageUrl, referencePrice } = req.body;
 
-    // 必填校验：标题、价格、分类
+    // 必填校验：标题（价格/分类/参考价校验提取到 utils/validators，失败抛 400 交 errorHandler 统一返回）
     if (!title || !String(title).trim()) {
       return res.status(400).json(ApiResponse.fail('标题不能为空', 400));
     }
-    const numPrice = Number(price);
-    if (!Number.isFinite(numPrice) || numPrice < 0) {
-      return res.status(400).json(ApiResponse.fail('价格不合法', 400));
-    }
-    const numCategoryId = Number(categoryId);
-    if (!Number.isInteger(numCategoryId) || numCategoryId < 1) {
-      return res.status(400).json(ApiResponse.fail('请选择合法分类', 400));
-    }
-    let numReferencePrice = null;
-    if (referencePrice != null && referencePrice !== '') {
-      numReferencePrice = Number(referencePrice);
-      if (!Number.isFinite(numReferencePrice) || numReferencePrice < 0) {
-        return res.status(400).json(ApiResponse.fail('参考价不合法', 400));
-      }
-    }
+    const numPrice = validatePrice(price);
+    const numCategoryId = validateCategoryId(categoryId);
+    const numReferencePrice = validateReferencePrice(referencePrice);
 
     // AI 草稿必须由卖家确认后才会走到这里；服务端不接受任何“AI 自动发布”路径。
     const product = await productService.createProduct({
@@ -107,33 +96,9 @@ exports.updateProduct = async (req, res, next) => {
       patch.title = body.title.trim();
     }
 
-    if (body.price !== undefined) {
-      const numPrice = Number(body.price);
-      if (!Number.isFinite(numPrice) || numPrice < 0) {
-        return res.status(400).json(ApiResponse.fail('价格不合法', 400));
-      }
-      patch.price = numPrice;
-    }
-
-    if (body.categoryId !== undefined) {
-      const numCategoryId = Number(body.categoryId);
-      if (!Number.isInteger(numCategoryId) || numCategoryId < 1) {
-        return res.status(400).json(ApiResponse.fail('请选择合法分类', 400));
-      }
-      patch.categoryId = numCategoryId;
-    }
-
-    if (body.referencePrice !== undefined) {
-      if (body.referencePrice === null || body.referencePrice === '') {
-        patch.referencePrice = null;
-      } else {
-        const num = Number(body.referencePrice);
-        if (!Number.isFinite(num) || num < 0) {
-          return res.status(400).json(ApiResponse.fail('参考价不合法', 400));
-        }
-        patch.referencePrice = num;
-      }
-    }
+    if (body.price !== undefined) patch.price = validatePrice(body.price);
+    if (body.categoryId !== undefined) patch.categoryId = validateCategoryId(body.categoryId);
+    if (body.referencePrice !== undefined) patch.referencePrice = validateReferencePrice(body.referencePrice);
 
     if (body.description !== undefined) patch.description = body.description;
     if (body.imageUrl !== undefined) patch.imageUrl = body.imageUrl;
