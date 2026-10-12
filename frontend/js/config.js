@@ -2,7 +2,7 @@
 // 后端同域托管前端，API 用相对路径 /api 即可。
 // 调试时可加 ?api=http://localhost:8080/api 强制指定。
 
-const DEFAULT_API_BASE = '/api';
+const DEFAULT_API_BASE = 'http://localhost:8080/api';
 
 function resolveApiBase() {
   const urlParams = new URLSearchParams(location.search);

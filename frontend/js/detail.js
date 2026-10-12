@@ -24,8 +24,9 @@
   function render(p) {
     const canOrder = p.status === 'ON_SALE';
     box.innerHTML = `
-      <img class="detail-image" src="${p.image_url || ''}" alt="${p.title}"
-           onerror="this.style.visibility='hidden'">
+      ${p.image_url
+        ? `<img class="detail-image" src="${p.image_url}" alt="${p.title}">`
+        : `<div class="detail-image placeholder">暂无图片</div>`}
       <h1>${p.title}</h1>
       <div class="detail-price">¥${Number(p.price).toFixed(2)}</div>
       <div class="detail-meta">状态：${STATUS_TEXT[p.status] || p.status}</div>
