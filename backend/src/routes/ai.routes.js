@@ -25,6 +25,9 @@ const upload = multer({
 // POST /api/ai/draft   上传物品照片 -> 返回标题+描述+参考报价（可编辑草稿）
 router.post('/draft', upload.single('image'), aiController.generateDraft);
 
+// GET  /api/ai/stats   C1：AI 用法统计（调用量 + 估算成本累计）
+router.get('/stats', aiController.getStats);
+
 // POST /api/ai/answer  （P1 可裁剪）买家咨询 AI 应答
 router.post('/answer', aiController.answerQuestion);
 

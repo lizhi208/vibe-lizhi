@@ -93,7 +93,8 @@ python -m http.server 5500
 | PUT | `/api/products/:id` | 编辑商品 | 已可用 |
 | POST | `/api/orders` | 下单锁定（ON_SALE → LOCKED） | 已可用（事务 + 防重复锁定） |
 | PATCH | `/api/orders/:id/deal` | 标记成交（LOCKED → SOLD） | 已可用 |
-| POST | `/api/ai/draft` | 上传照片生成文案+参考价草稿 | 待接第三方 API（无 Key 时可手动发布） |
+| POST | `/api/ai/draft` | 上传照片生成文案+参考价草稿 | 已可用（未配置 Key 自动 502 降级，手动发布不断） |
+| GET | `/api/ai/stats` | AI 用法统计（调用量+估算成本，C1） | 已可用 |
 | POST | `/api/ai/answer` | AI 应答买家咨询（P1，可裁剪） | TODO |
 | GET | `/api/stats/overview` | 商品总览（分类分布+状态分布） | 已可用（T1 接入） |
 | POST | `/api/stats/visit` | 记录一次页面访问 | 已可用（T2 访问统计） |

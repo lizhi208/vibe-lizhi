@@ -366,6 +366,24 @@ describe('标记成交', () => {
 describe('AI 接口', () => {
   before(resetTestDatabase);
 
+  // 锁定「未配置 Key」场景：无论本地 .env 是否填了真实 Key，本组用例都必须走降级路径，
+  // 保证契约测试永不真实调用外部大模型（不发请求、不花钱、不受网络抖动影响）。
+  let savedKey;
+  before(() => {
+    savedKey = process.env.AI_API_KEY;
+    process.env.AI_API_KEY = 'your_api_key';
+  });
+  after(() => {
+    if (savedKey === undefined) delete process.env.AI_API_KEY;
+    else process.env.AI_API_KEY = savedKey;
+  });
+
+  // 最小合法 PNG（1x1 透明像素）
+  const TINY_PNG = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+    'base64'
+  );
+
   test('POST /api/ai/draft 未上传文件 → 400', async () => {
     const res = await api().post('/api/ai/draft');
     assert.equal(res.status, 400);
@@ -385,6 +403,34 @@ describe('AI 接口', () => {
       .post('/api/ai/draft')
       .attach('image', big, { filename: 'big.png', contentType: 'image/png' });
     assert.equal(res.status, 400);
+  });
+
+  test('POST /api/ai/draft 合法图片但未配置 Key → 502 且 body.code=502（优雅降级）', async () => {
+    const res = await api()
+      .post('/api/ai/draft')
+      .attach('image', TINY_PNG, { filename: 'tiny.png', contentType: 'image/png' });
+    assert.equal(res.status, 502);
+    assert.equal(res.body.code, 502);
+    assert.ok(res.body.message.length > 0, '502 必须带用户可读降级文案');
+  });
+
+  test('GET /api/ai/stats 结构与口径：一次 502 降级后 totalCalls/failedCalls +1（C1）', async () => {
+    const s0 = (await api().get('/api/ai/stats')).body.data;
+    for (const k of ['totalCalls', 'successCalls', 'failedCalls', 'estimatedCost']) {
+      assert.equal(typeof s0[k], 'number', `${k} 必须是数字`);
+    }
+    assert.equal(s0.totalCalls, s0.successCalls + s0.failedCalls, '口径：总数=成功+失败');
+
+    // 无 Key 环境下这次调用必走 502 降级（上面用例已锁定），失败计数应 +1
+    await api()
+      .post('/api/ai/draft')
+      .attach('image', TINY_PNG, { filename: 'tiny.png', contentType: 'image/png' });
+
+    const s1 = (await api().get('/api/ai/stats')).body.data;
+    assert.equal(s1.totalCalls, s0.totalCalls + 1);
+    assert.equal(s1.failedCalls, s0.failedCalls + 1);
+    assert.equal(s1.successCalls, s0.successCalls);
+    assert.equal(s1.estimatedCost, Number((s1.successCalls * 0.0031).toFixed(4)));
   });
 
   test('POST /api/ai/answer 未实现 → 501', async () => {

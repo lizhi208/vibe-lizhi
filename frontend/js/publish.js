@@ -50,8 +50,12 @@
       aiTip.textContent = '草稿已生成，请核对修改后再发布';
       aiTip.className = 'tip success';
     } catch (err) {
-      // AI 失败不阻断发布：允许手动填写
-      aiTip.textContent = 'AI 生成失败（' + err.message + '），可直接手动填写后发布';
+      // AI 失败不阻断发布：允许手动填写。
+      // 断网/请求根本没发出去（fetch 抛 TypeError）时按契约优雅提示，不白屏。
+      const offline = !navigator.onLine || err instanceof TypeError;
+      aiTip.textContent = offline
+        ? 'AI 服务暂不可达，请检查网络；也可以直接手动填写后发布'
+        : 'AI 生成失败（' + err.message + '），可直接手动填写后发布';
       aiTip.className = 'tip error';
     } finally {
       aiBtn.disabled = false;
@@ -75,5 +79,17 @@
     }
   });
 
+  // C1：AI 用法统计（调用量 + 估算成本累计）；拉取失败静默隐藏，不影响发布
+  async function renderAiStats() {
+    const tip = document.getElementById('aiStatsTip');
+    try {
+      const s = await window.api.get('/ai/stats');
+      tip.textContent = `AI 已累计服务 ${s.totalCalls} 次（成功 ${s.successCalls}），估算成本 ¥${s.estimatedCost}`;
+    } catch (err) {
+      tip.textContent = '';
+    }
+  }
+
   renderCategoryOptions();
+  renderAiStats();
 })();
